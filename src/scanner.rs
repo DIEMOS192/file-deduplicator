@@ -102,7 +102,6 @@ mod tests {
             min_size: 1,
             hidden: false,
             follow_links: false,
-            json: false,
         }
     }
 

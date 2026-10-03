@@ -26,7 +26,7 @@ dedup clean ~/Downloads --action delete --apply
 | `--min-size <BYTES>` | skip files smaller than this (default `1`, so empty files are skipped) |
 | `--hidden` | include hidden files and directories |
 | `--follow-links` | follow symbolic links |
-| `--json` | machine-readable output |
+| `--json` | machine-readable output (`scan` only) |
 | `--keep <oldest\|newest\|shortest-path\|first>` | which copy survives in each group (`clean` only) |
 | `--action <trash\|delete>` | how to remove the others (`clean` only, default `trash`) |
 | `--apply` | perform the removal; without it `clean` is a dry run |

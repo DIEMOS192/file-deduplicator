@@ -36,16 +36,16 @@ pub struct ScanOptions {
     /// Follow symbolic links.
     #[arg(long)]
     pub follow_links: bool,
-
-    /// Print results as JSON.
-    #[arg(long)]
-    pub json: bool,
 }
 
 #[derive(Debug, Args)]
 pub struct ScanArgs {
     #[command(flatten)]
     pub options: ScanOptions,
+
+    /// Print results as JSON.
+    #[arg(long)]
+    pub json: bool,
 }
 
 #[derive(Debug, Args)]
