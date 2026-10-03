@@ -79,7 +79,7 @@ Each milestone is its own commit, pushed to GitHub.
 - [x] **M3 — Duplicate finder**: size → partial hash → full hash pipeline + unit tests.
 - [x] **M4 — Reporting**: human-readable summary and `--json` output.
 - [x] **M5 — Cleaning**: keep strategies, trash/delete, dry run by default.
-- [ ] **M6 — Tests & CI**: integration tests, GitHub Actions.
+- [x] **M6 — Tests & CI**: integration tests, GitHub Actions.
 
 ## Ideas for later
 
