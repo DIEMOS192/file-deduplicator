@@ -77,7 +77,7 @@ Each milestone is its own commit, pushed to GitHub.
 - [x] **M1 — CLI skeleton**: `scan` / `clean` subcommands parse, `--help` works.
 - [x] **M2 — Scanner**: walk directories, filters (min size, hidden, symlinks).
 - [x] **M3 — Duplicate finder**: size → partial hash → full hash pipeline + unit tests.
-- [ ] **M4 — Reporting**: human-readable summary and `--json` output.
+- [x] **M4 — Reporting**: human-readable summary and `--json` output.
 - [ ] **M5 — Cleaning**: keep strategies, trash/delete, dry run by default.
 - [ ] **M6 — Tests & CI**: integration tests, GitHub Actions.
 
