@@ -74,7 +74,7 @@ file-deduplicator/
 Each milestone is its own commit, pushed to GitHub.
 
 - [x] **M0 — Setup**: Rust toolchain, repo, plan, `.gitignore`, Cargo project.
-- [ ] **M1 — CLI skeleton**: `scan` / `clean` subcommands parse, `--help` works.
+- [x] **M1 — CLI skeleton**: `scan` / `clean` subcommands parse, `--help` works.
 - [ ] **M2 — Scanner**: walk directories, filters (min size, hidden, symlinks).
 - [ ] **M3 — Duplicate finder**: size → partial hash → full hash pipeline + unit tests.
 - [ ] **M4 — Reporting**: human-readable summary and `--json` output.
