@@ -1,0 +1,13 @@
+[package]
+name = "file-deduplicator"
+version = "0.1.0"
+edition = "2021"
+description = "Find and safely remove duplicate files"
+license = "MIT"
+repository = "https://github.com/DIEMOS192/file-deduplicator"
+
+[[bin]]
+name = "dedup"
+path = "src/main.rs"
+
+[dependencies]
