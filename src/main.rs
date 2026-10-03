@@ -1,4 +1,5 @@
 mod cli;
+mod scanner;
 
 use anyhow::Result;
 use clap::Parser;
@@ -9,7 +10,11 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
         Command::Scan(args) => {
-            println!("scan: {:?}", args);
+            let result = scanner::scan(&args.options);
+            for file in &result.files {
+                println!("{} ({} bytes)", file.path.display(), file.size);
+            }
+            println!("{} files found", result.files.len());
         }
         Command::Clean(args) => {
             println!("clean: {:?}", args);
