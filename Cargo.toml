@@ -12,7 +12,9 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1"
+blake3 = "1"
 clap = { version = "4", features = ["derive"] }
+rayon = "1"
 walkdir = "2"
 
 [dev-dependencies]
