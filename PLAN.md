@@ -23,6 +23,7 @@ dedup scan <PATH>...                 # list duplicate groups (read-only)
 dedup clean <PATH>...                # remove duplicates, keeping one per group
     --keep <oldest|newest|shortest-path|first>   (default: oldest)
     --action <trash|delete>          # trash = recycle bin (default)
+    --only-delete-in <DIR>           # only remove copies inside DIR (repeatable)
     --apply                          # actually do it; without this it's a dry run
     (+ same filters as scan)
 ```
@@ -85,6 +86,7 @@ Each milestone is its own commit, pushed to GitHub.
 - [x] **M5 — Cleaning**: keep strategies, trash/delete, dry run by default.
 - [x] **M6 — Tests & CI**: integration tests, GitHub Actions.
 - [x] **M7 — Excludes**: `--exclude` globs plus built-in excludes for dependency/build/VCS folders.
+- [x] **M8 — Protected cleaning**: `--only-delete-in` confines removals to chosen folders; copies elsewhere are always kept.
 
 ## Ideas for later
 

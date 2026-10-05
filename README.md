@@ -22,6 +22,9 @@ dedup clean ~/Downloads --keep oldest --apply
 
 # Permanently delete instead of using the recycle bin
 dedup clean ~/Downloads --action delete --apply
+
+# Big scans: compare against everything, but only ever remove copies in Downloads
+dedup clean ~/Pictures ~/Documents ~/Downloads --only-delete-in ~/Downloads
 ```
 
 | Flag | Meaning |
@@ -34,9 +37,19 @@ dedup clean ~/Downloads --action delete --apply
 | `--json` | machine-readable output (`scan` only) |
 | `--keep <oldest\|newest\|shortest-path\|first>` | which copy survives in each group (`clean` only) |
 | `--action <trash\|delete>` | how to remove the others (`clean` only, default `trash`) |
+| `--only-delete-in <DIR>` | only remove copies inside this folder; copies elsewhere are always kept (`clean` only, repeatable) |
 | `--apply` | perform the removal; without it `clean` is a dry run |
 
 Run `dedup --help` or `dedup <command> --help` for details.
+
+### Cleaning large folders safely
+
+Identical bytes don't always mean a copy is unneeded: programs, projects and backups often keep identical files on purpose. When scanning a broad folder:
+
+- Prefer folders that hold your own files (Downloads, Pictures, Documents) over a whole profile.
+- Use `--min-size` to focus on the files that actually take space.
+- Use `--only-delete-in` so removals are confined to a folder you consider disposable.
+- Keep the default `--action trash` so anything can be restored.
 
 ## How it works
 

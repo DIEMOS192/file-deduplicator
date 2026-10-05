@@ -73,6 +73,11 @@ pub struct CleanArgs {
     #[arg(long, value_enum, default_value_t = Action::Trash)]
     pub action: Action,
 
+    /// Only remove copies inside this directory (repeatable). Copies elsewhere are never
+    /// touched; a group with a copy outside keeps it and removes every copy inside.
+    #[arg(long, value_name = "DIR")]
+    pub only_delete_in: Vec<PathBuf>,
+
     /// Actually remove files. Without this flag nothing is changed.
     #[arg(long)]
     pub apply: bool,

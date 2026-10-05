@@ -154,3 +154,48 @@ fn invalid_exclude_pattern_fails() {
         .failure()
         .stderr(predicate::str::contains("invalid --exclude pattern"));
 }
+
+#[test]
+fn only_delete_in_never_touches_files_outside() {
+    let dir = fixture();
+    dedup()
+        .args(["clean", "--action", "delete", "--apply", "--only-delete-in"])
+        .arg(dir.path().join("sub"))
+        .arg(dir.path())
+        .assert()
+        .success();
+    // Both copies inside `sub` are gone; every copy outside it survives,
+    // including the b1/b2 pair that duplicates each other.
+    assert!(!dir.path().join("sub").join("a2.txt").exists());
+    assert!(!dir.path().join("sub").join("b3.txt").exists());
+    for name in ["a1.txt", "b1.txt", "b2.txt", "unique.txt"] {
+        assert!(dir.path().join(name).exists(), "{name} should be kept");
+    }
+}
+
+#[test]
+fn only_delete_in_reports_untouched_groups() {
+    let dir = fixture();
+    fs::create_dir(dir.path().join("empty")).unwrap();
+    dedup()
+        .args(["clean", "--only-delete-in"])
+        .arg(dir.path().join("empty"))
+        .arg(dir.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("2 groups left untouched"))
+        .stdout(predicate::str::contains("would move to trash 0 files"));
+}
+
+#[test]
+fn only_delete_in_missing_dir_fails() {
+    let dir = fixture();
+    dedup()
+        .args(["clean", "--only-delete-in"])
+        .arg(dir.path().join("nope"))
+        .arg(dir.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("--only-delete-in"));
+    assert_eq!(count_files(dir.path()), 6);
+}

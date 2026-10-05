@@ -8,7 +8,7 @@ mod scanner;
 
 use std::io::{self, Write};
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use clap::Parser;
 
 use cli::{Action, CleanArgs, Cli, Command, ScanArgs, ScanOptions};
@@ -56,6 +56,14 @@ fn run_scan(args: &ScanArgs) -> Result<()> {
 }
 
 fn run_clean(args: &CleanArgs) -> Result<()> {
+    let deletable_dirs = args
+        .only_delete_in
+        .iter()
+        .map(|d| {
+            std::fs::canonicalize(d)
+                .with_context(|| format!("--only-delete-in {}: not found", d.display()))
+        })
+        .collect::<Result<Vec<_>>>()?;
     let scan = find(&args.options)?;
     let mut out = io::stdout().lock();
     report::print_errors(&mut out, &scan.errors)?;
@@ -76,23 +84,32 @@ fn run_clean(args: &CleanArgs) -> Result<()> {
     let mut removed = 0usize;
     let mut freed = 0u64;
     let mut failures = Vec::new();
+    let mut shown = 0usize;
+    let mut untouched = 0usize;
 
-    for (i, group) in scan.groups.iter().enumerate() {
-        let plan = cleaner::plan_group(group, args.keep);
+    for group in &scan.groups {
+        let plan = cleaner::plan_group(group, args.keep, &deletable_dirs);
+        if plan.remove.is_empty() {
+            untouched += 1;
+            continue;
+        }
+        shown += 1;
         writeln!(
             out,
             "Group {} — {} files × {}",
-            i + 1,
+            shown,
             group.files.len(),
             human_bytes(group.size)
         )?;
-        writeln!(out, "  keep    {}", display_path(&plan.keep.path))?;
+        for file in &plan.keep {
+            writeln!(out, "  keep    {}", display_path(&file.path))?;
+        }
 
-        // Never remove the copies if the one we're keeping has disappeared.
-        if args.apply && !plan.keep.path.exists() {
+        // Never remove the copies if a file we're keeping has disappeared.
+        if let Some(missing) = plan.keep.iter().find(|f| args.apply && !f.path.exists()) {
             failures.push(format!(
                 "{}: kept file no longer exists, skipping group",
-                display_path(&plan.keep.path)
+                display_path(&missing.path)
             ));
             continue;
         }
@@ -116,6 +133,13 @@ fn run_clean(args: &CleanArgs) -> Result<()> {
         writeln!(out)?;
     }
 
+    if untouched > 0 {
+        writeln!(
+            out,
+            "{} groups left untouched: no copies inside --only-delete-in.",
+            untouched
+        )?;
+    }
     if args.apply {
         writeln!(
             out,
