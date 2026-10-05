@@ -18,6 +18,7 @@ dedup scan <PATH>...                 # list duplicate groups (read-only)
     --follow-links                   # follow symbolic links
     --exclude <GLOB>                 # skip matching names/paths (repeatable)
     --no-default-excludes            # don't skip node_modules, .git, target, ...
+    --include-online-only            # read cloud placeholders (downloads them)
     --json                           # machine-readable output
 
 dedup clean <PATH>...                # remove duplicates, keeping one per group
@@ -87,6 +88,7 @@ Each milestone is its own commit, pushed to GitHub.
 - [x] **M6 — Tests & CI**: integration tests, GitHub Actions.
 - [x] **M7 — Excludes**: `--exclude` globs plus built-in excludes for dependency/build/VCS folders.
 - [x] **M8 — Protected cleaning**: `--only-delete-in` confines removals to chosen folders; copies elsewhere are always kept.
+- [x] **M9 — Cloud-safe scanning**: skip online-only placeholders (OneDrive etc.) so scans never trigger downloads.
 
 ## Ideas for later
 

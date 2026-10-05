@@ -32,6 +32,12 @@ struct Scan {
 
 fn find(options: &ScanOptions) -> Result<Scan> {
     let scanned = scanner::scan(options)?;
+    if scanned.online_only_skipped > 0 {
+        eprintln!(
+            "note: skipped {} online-only cloud files (use --include-online-only to read them)",
+            scanned.online_only_skipped
+        );
+    }
     let files_scanned = scanned.files.len();
     let found = finder::find_duplicates(scanned.files);
     let mut errors = scanned.errors;

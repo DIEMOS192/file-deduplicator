@@ -48,6 +48,11 @@ pub struct ScanOptions {
     /// .hg, target, __pycache__, .venv, venv, .tox, $RECYCLE.BIN, System Volume Information.
     #[arg(long)]
     pub no_default_excludes: bool,
+
+    /// Also read cloud files that are online-only (e.g. OneDrive placeholders).
+    /// This makes the sync client download them.
+    #[arg(long)]
+    pub include_online_only: bool,
 }
 
 #[derive(Debug, Args)]

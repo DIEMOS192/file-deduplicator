@@ -20,6 +20,8 @@ pub struct FileEntry {
 pub struct ScanResult {
     pub files: Vec<FileEntry>,
     pub errors: Vec<String>,
+    /// Cloud placeholders (e.g. OneDrive "online-only") skipped to avoid downloading them.
+    pub online_only_skipped: usize,
 }
 
 /// Walk every path in `options.paths` and collect files that pass the filters.
@@ -63,6 +65,10 @@ pub fn scan(options: &ScanOptions) -> Result<ScanResult> {
             if metadata.len() < options.min_size {
                 continue;
             }
+            if !options.include_online_only && is_online_only(&metadata) {
+                result.online_only_skipped += 1;
+                continue;
+            }
             let path =
                 std::fs::canonicalize(entry.path()).unwrap_or_else(|_| entry.path().to_path_buf());
             if !seen.insert(path.clone()) {
@@ -77,6 +83,34 @@ pub fn scan(options: &ScanOptions) -> Result<ScanResult> {
     }
 
     Ok(result)
+}
+
+/// True for cloud-sync placeholders whose contents aren't on disk. Reading one makes the
+/// sync client (OneDrive, Dropbox, iCloud...) download it, so they are skipped by default.
+/// Checking attributes doesn't trigger a download.
+fn is_online_only(metadata: &std::fs::Metadata) -> bool {
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::MetadataExt;
+        has_online_only_attributes(metadata.file_attributes())
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = metadata;
+        false
+    }
+}
+
+#[cfg_attr(not(windows), allow(dead_code))]
+fn has_online_only_attributes(attributes: u32) -> bool {
+    const FILE_ATTRIBUTE_OFFLINE: u32 = 0x1000;
+    const FILE_ATTRIBUTE_RECALL_ON_OPEN: u32 = 0x40000;
+    const FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS: u32 = 0x400000;
+    attributes
+        & (FILE_ATTRIBUTE_OFFLINE
+            | FILE_ATTRIBUTE_RECALL_ON_OPEN
+            | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS)
+        != 0
 }
 
 fn is_hidden(entry: &DirEntry) -> bool {
@@ -111,6 +145,7 @@ mod tests {
             follow_links: false,
             exclude: Vec::new(),
             no_default_excludes: false,
+            include_online_only: false,
         }
     }
 
@@ -151,6 +186,15 @@ mod tests {
 
         opts.no_default_excludes = true;
         assert_eq!(scan(&opts).unwrap().files.len(), 2, "node_modules included");
+    }
+
+    #[test]
+    fn online_only_attributes_are_detected() {
+        assert!(has_online_only_attributes(0x400000 | 0x20)); // OneDrive online-only
+        assert!(has_online_only_attributes(0x40000));
+        assert!(has_online_only_attributes(0x1000));
+        assert!(!has_online_only_attributes(0x20)); // plain archive bit
+        assert!(!has_online_only_attributes(0x80000 | 0x20)); // pinned, local
     }
 
     #[test]

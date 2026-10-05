@@ -34,6 +34,7 @@ dedup clean ~/Pictures ~/Documents ~/Downloads --only-delete-in ~/Downloads
 | `--follow-links` | follow symbolic links |
 | `--exclude <GLOB>` | skip matching files/folders; repeatable. No `/` matches a name anywhere (`node_modules`, `*.tmp`), with `/` matches the full path (`**/Photos/raw/**`) |
 | `--no-default-excludes` | also scan `node_modules`, `.git`, `target`, `.venv`, `$RECYCLE.BIN` and the other built-in excludes |
+| `--include-online-only` | also read cloud placeholders (OneDrive "online-only" files). Skipped by default because reading them downloads them |
 | `--json` | machine-readable output (`scan` only) |
 | `--keep <oldest\|newest\|shortest-path\|first>` | which copy survives in each group (`clean` only) |
 | `--action <trash\|delete>` | how to remove the others (`clean` only, default `trash`) |
