@@ -11,6 +11,9 @@ dedup scan ~/Pictures ~/Downloads
 # Ignore files under 1 MB, output JSON
 dedup scan ~/Downloads --min-size 1000000 --json
 
+# Skip extra folders/files (repeatable; node_modules, .git, target, ... are skipped by default)
+dedup scan ~/Projects --exclude '*.tmp' --exclude '**/Photos/raw/**'
+
 # Preview what would be removed (dry run — nothing is touched)
 dedup clean ~/Downloads --keep oldest
 
@@ -26,6 +29,8 @@ dedup clean ~/Downloads --action delete --apply
 | `--min-size <BYTES>` | skip files smaller than this (default `1`, so empty files are skipped) |
 | `--hidden` | include hidden files and directories |
 | `--follow-links` | follow symbolic links |
+| `--exclude <GLOB>` | skip matching files/folders; repeatable. No `/` matches a name anywhere (`node_modules`, `*.tmp`), with `/` matches the full path (`**/Photos/raw/**`) |
+| `--no-default-excludes` | also scan `node_modules`, `.git`, `target`, `.venv`, `$RECYCLE.BIN` and the other built-in excludes |
 | `--json` | machine-readable output (`scan` only) |
 | `--keep <oldest\|newest\|shortest-path\|first>` | which copy survives in each group (`clean` only) |
 | `--action <trash\|delete>` | how to remove the others (`clean` only, default `trash`) |

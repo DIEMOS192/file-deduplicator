@@ -36,6 +36,18 @@ pub struct ScanOptions {
     /// Follow symbolic links.
     #[arg(long)]
     pub follow_links: bool,
+
+    /// Skip files and directories matching this glob (repeatable).
+    ///
+    /// Patterns without '/' match a name anywhere, e.g. `node_modules` or `*.tmp`.
+    /// Patterns with '/' match the full path, e.g. `**/Photos/raw/**`.
+    #[arg(long, value_name = "GLOB")]
+    pub exclude: Vec<String>,
+
+    /// Don't skip the built-in excludes: node_modules, bower_components, .git, .svn,
+    /// .hg, target, __pycache__, .venv, venv, .tox, $RECYCLE.BIN, System Volume Information.
+    #[arg(long)]
+    pub no_default_excludes: bool,
 }
 
 #[derive(Debug, Args)]

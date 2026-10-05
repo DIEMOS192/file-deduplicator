@@ -115,3 +115,42 @@ fn clean_apply_delete_keeps_one_of_each() {
 fn missing_path_argument_is_an_error() {
     dedup().arg("scan").assert().failure();
 }
+
+#[test]
+fn exclude_and_default_excludes() {
+    let dir = fixture();
+    let nm = dir.path().join("node_modules");
+    fs::create_dir(&nm).unwrap();
+    fs::write(nm.join("a3.txt"), "alpha").unwrap();
+
+    // node_modules is skipped by default, and `sub` is excluded explicitly,
+    // leaving only the b1/b2 pair.
+    dedup()
+        .args(["scan", "--exclude", "sub"])
+        .arg(dir.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Scanned 4 files: 1 duplicate groups",
+        ));
+
+    dedup()
+        .args(["scan", "--no-default-excludes"])
+        .arg(dir.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Scanned 7 files: 2 duplicate groups",
+        ));
+}
+
+#[test]
+fn invalid_exclude_pattern_fails() {
+    let dir = fixture();
+    dedup()
+        .args(["scan", "--exclude", "["])
+        .arg(dir.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("invalid --exclude pattern"));
+}

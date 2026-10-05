@@ -16,6 +16,8 @@ dedup scan <PATH>...                 # list duplicate groups (read-only)
     --min-size <BYTES>               # ignore small files (default: 1)
     --hidden                         # include hidden files/dirs
     --follow-links                   # follow symbolic links
+    --exclude <GLOB>                 # skip matching names/paths (repeatable)
+    --no-default-excludes            # don't skip node_modules, .git, target, ...
     --json                           # machine-readable output
 
 dedup clean <PATH>...                # remove duplicates, keeping one per group
@@ -46,6 +48,7 @@ file-deduplicator/
 │   ├── main.rs         # entry point: parse args, dispatch commands
 │   ├── cli.rs          # clap command/flag definitions
 │   ├── scanner.rs      # directory walking + filtering
+│   ├── exclude.rs      # --exclude glob matching + default excludes
 │   ├── hasher.rs       # partial/full hashing helpers
 │   ├── finder.rs       # size → partial → full grouping pipeline
 │   ├── report.rs       # human-readable and JSON output
@@ -62,6 +65,7 @@ file-deduplicator/
 |-------|-----|
 | `clap` | argument parsing with derive macros |
 | `walkdir` | recursive directory traversal |
+| `globset` | `--exclude` glob patterns |
 | `blake3` | very fast cryptographic hash |
 | `rayon` | easy data parallelism |
 | `anyhow` | ergonomic error handling |
@@ -80,10 +84,10 @@ Each milestone is its own commit, pushed to GitHub.
 - [x] **M4 — Reporting**: human-readable summary and `--json` output.
 - [x] **M5 — Cleaning**: keep strategies, trash/delete, dry run by default.
 - [x] **M6 — Tests & CI**: integration tests, GitHub Actions.
+- [x] **M7 — Excludes**: `--exclude` globs plus built-in excludes for dependency/build/VCS folders.
 
 ## Ideas for later
 
-- `--exclude <GLOB>` patterns
 - `hardlink` action (replace duplicates with hard links to save space without losing paths)
 - Interactive mode (choose which file to keep per group)
 - Hash cache to make re-scans of large trees instant

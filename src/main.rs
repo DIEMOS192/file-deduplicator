@@ -1,5 +1,6 @@
 mod cleaner;
 mod cli;
+mod exclude;
 mod finder;
 mod hasher;
 mod report;
@@ -29,21 +30,21 @@ struct Scan {
     errors: Vec<String>,
 }
 
-fn find(options: &ScanOptions) -> Scan {
-    let scanned = scanner::scan(options);
+fn find(options: &ScanOptions) -> Result<Scan> {
+    let scanned = scanner::scan(options)?;
     let files_scanned = scanned.files.len();
     let found = finder::find_duplicates(scanned.files);
     let mut errors = scanned.errors;
     errors.extend(found.errors);
-    Scan {
+    Ok(Scan {
         files_scanned,
         groups: found.groups,
         errors,
-    }
+    })
 }
 
 fn run_scan(args: &ScanArgs) -> Result<()> {
-    let scan = find(&args.options);
+    let scan = find(&args.options)?;
     let mut out = io::stdout().lock();
     if args.json {
         report::print_json(&mut out, scan.files_scanned, &scan.groups, &scan.errors)?;
@@ -55,7 +56,7 @@ fn run_scan(args: &ScanArgs) -> Result<()> {
 }
 
 fn run_clean(args: &CleanArgs) -> Result<()> {
-    let scan = find(&args.options);
+    let scan = find(&args.options)?;
     let mut out = io::stdout().lock();
     report::print_errors(&mut out, &scan.errors)?;
 

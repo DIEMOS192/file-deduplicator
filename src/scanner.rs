@@ -1,9 +1,11 @@
 use std::path::PathBuf;
 use std::time::SystemTime;
 
+use anyhow::Result;
 use walkdir::{DirEntry, WalkDir};
 
 use crate::cli::ScanOptions;
+use crate::exclude::Excludes;
 
 /// A regular file discovered while walking the given paths.
 #[derive(Debug, Clone)]
@@ -24,7 +26,9 @@ pub struct ScanResult {
 ///
 /// Unreadable entries are recorded in `errors` instead of aborting the scan.
 /// The same file reached through two overlapping paths is only listed once.
-pub fn scan(options: &ScanOptions) -> ScanResult {
+/// Fails only if an exclude pattern is invalid.
+pub fn scan(options: &ScanOptions) -> Result<ScanResult> {
+    let excludes = Excludes::new(&options.exclude, !options.no_default_excludes)?;
     let mut result = ScanResult::default();
     let mut seen = std::collections::HashSet::new();
 
@@ -32,8 +36,11 @@ pub fn scan(options: &ScanOptions) -> ScanResult {
         let walker = WalkDir::new(root)
             .follow_links(options.follow_links)
             .into_iter()
-            // Never filter out the root itself, even if it looks hidden (e.g. ".").
-            .filter_entry(|e| e.depth() == 0 || options.hidden || !is_hidden(e));
+            // Never filter out the root itself, even if it looks hidden (e.g. ".") or excluded.
+            .filter_entry(|e| {
+                e.depth() == 0
+                    || ((options.hidden || !is_hidden(e)) && !excludes.is_excluded(e.path()))
+            });
 
         for entry in walker {
             let entry = match entry {
@@ -69,7 +76,7 @@ pub fn scan(options: &ScanOptions) -> ScanResult {
         }
     }
 
-    result
+    Ok(result)
 }
 
 fn is_hidden(entry: &DirEntry) -> bool {
@@ -102,6 +109,8 @@ mod tests {
             min_size: 1,
             hidden: false,
             follow_links: false,
+            exclude: Vec::new(),
+            no_default_excludes: false,
         }
     }
 
@@ -113,15 +122,35 @@ mod tests {
         fs::create_dir(dir.path().join(".hidden")).unwrap();
         fs::write(dir.path().join(".hidden").join("b.txt"), "hello").unwrap();
 
-        let result = scan(&options(dir.path()));
+        let result = scan(&options(dir.path())).unwrap();
         assert_eq!(result.files.len(), 1, "empty and hidden files skipped");
 
         let mut opts = options(dir.path());
         opts.hidden = true;
-        assert_eq!(scan(&opts).files.len(), 2);
+        assert_eq!(scan(&opts).unwrap().files.len(), 2);
 
         opts.min_size = 0;
-        assert_eq!(scan(&opts).files.len(), 3);
+        assert_eq!(scan(&opts).unwrap().files.len(), 3);
+    }
+
+    #[test]
+    fn excluded_directories_are_pruned() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("node_modules").join("pkg")).unwrap();
+        fs::write(
+            dir.path().join("node_modules").join("pkg").join("a.js"),
+            "x",
+        )
+        .unwrap();
+        fs::write(dir.path().join("keep.txt"), "x").unwrap();
+        fs::write(dir.path().join("skip.tmp"), "x").unwrap();
+
+        let mut opts = options(dir.path());
+        opts.exclude = vec!["*.tmp".into()];
+        assert_eq!(scan(&opts).unwrap().files.len(), 1, "defaults + *.tmp");
+
+        opts.no_default_excludes = true;
+        assert_eq!(scan(&opts).unwrap().files.len(), 2, "node_modules included");
     }
 
     #[test]
@@ -130,6 +159,6 @@ mod tests {
         fs::write(dir.path().join("a.txt"), "hello").unwrap();
         let mut opts = options(dir.path());
         opts.paths.push(dir.path().join("a.txt"));
-        assert_eq!(scan(&opts).files.len(), 1);
+        assert_eq!(scan(&opts).unwrap().files.len(), 1);
     }
 }
